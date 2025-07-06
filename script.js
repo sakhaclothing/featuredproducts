@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // WhatsApp button functionality
         modal.querySelector('.btn-whatsapp').addEventListener('click', function () {
             const message = `Halo! Saya tertarik dengan produk ${productName} (${price}). Bisa tolong berikan informasi lebih lanjut?`;
-            const whatsappUrl = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`;
+            const whatsappUrl = `https://wa.me/6285759790334?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
         });
 
