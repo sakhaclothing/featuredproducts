@@ -313,11 +313,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 background: var(--text-light);
                 color: white;
                 border: none;
-                padding: 12px 24px;
+                padding: 0 24px;
                 border-radius: 25px;
                 cursor: pointer;
                 font-weight: 500;
                 transition: all 0.3s ease;
+                min-width: 90px;
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+                height: 44px;
+                white-space: normal;
+                overflow: visible;
             }
             
             .btn-close:hover {
