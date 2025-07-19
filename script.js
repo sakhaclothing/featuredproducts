@@ -1,7 +1,7 @@
 // Featured Products Script
 class FeaturedProducts {
     constructor() {
-        this.apiBaseUrl = 'https://sakhaclothing.shop'; // Update with your actual backend URL
+        this.apiBaseUrl = 'https://asia-southeast2-ornate-course-437014-u9.cloudfunctions.net/sakha'; // Update with your actual backend URL
         this.products = [];
         this.initializeEventListeners();
         this.loadFeaturedProducts();
