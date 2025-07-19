@@ -1,406 +1,222 @@
-// SAKHA COLLECTION - Interactive Features
-document.addEventListener('DOMContentLoaded', function () {
+// Featured Products Script
+class FeaturedProducts {
+    constructor() {
+        this.apiBaseUrl = 'https://sakhaclothing.shop'; // Update with your actual backend URL
+        this.products = [];
+        this.initializeEventListeners();
+        this.loadFeaturedProducts();
+    }
 
-    // Smooth scrolling for navigation links
-    const navLinks = document.querySelectorAll('nav a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId.startsWith('#')) {
-                const targetSection = document.querySelector(targetId);
-                if (targetSection) {
-                    targetSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
+    initializeEventListeners() {
+        // Detail button click handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btnDetail')) {
+                this.showProductDetail(e.target);
             }
-        });
-    });
-
-    // Product card hover effects
-    const productCards = document.querySelectorAll('.product-card');
-    productCards.forEach(card => {
-        card.addEventListener('mouseenter', function () {
-            this.style.transform = 'translateY(-15px) scale(1.02)';
-        });
-
-        card.addEventListener('mouseleave', function () {
-            this.style.transform = 'translateY(0) scale(1)';
-        });
-    });
-
-    // Detail button interactions
-    const detailButtons = document.querySelectorAll('.btnDetail');
-    detailButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            // Create a ripple effect
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.classList.add('ripple');
-
-            this.appendChild(ripple);
-
-            // Remove ripple after animation
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-
-            // Show product details (you can customize this)
-            showProductDetails(this);
-        });
-    });
-
-    // Scroll reveal animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function (entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-            }
-        });
-    }, observerOptions);
-
-    // Observe elements for scroll reveal
-    const scrollElements = document.querySelectorAll('.product-card, .catalogue-title, .info-section');
-    scrollElements.forEach(el => {
-        el.classList.add('scroll-reveal');
-        observer.observe(el);
-    });
-
-    // Parallax effect for banner
-    const banner = document.querySelector('.banner-section img');
-    if (banner) {
-        window.addEventListener('scroll', function () {
-            const scrolled = window.pageYOffset;
-            const rate = scrolled * -0.5;
-            banner.style.transform = `translateY(${rate}px)`;
         });
     }
 
-    // Simple image error handling
-    const images = document.querySelectorAll('img');
-    images.forEach(img => {
-        img.addEventListener('error', function () {
-            console.log('Image failed to load:', this.src);
-            // Show a placeholder
-            this.style.display = 'none';
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = `
-                width: 100%;
-                height: 250px;
-                background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #666;
-                font-size: 14px;
-                border-radius: 8px;
-            `;
-            errorDiv.textContent = 'Gambar tidak dapat dimuat';
-            this.parentNode.insertBefore(errorDiv, this);
-        });
-    });
+    async loadFeaturedProducts() {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/products?featured=true`);
+            const data = await response.json();
 
-    // Add CSS for ripple effect
-    const style = document.createElement('style');
-    style.textContent = `
-        .detail-btn {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: scale(0);
-            animation: ripple-animation 0.6s linear;
-            pointer-events: none;
-        }
-        
-        @keyframes ripple-animation {
-            to {
-                transform: scale(4);
-                opacity: 0;
+            if (data.status === 'success') {
+                this.products = data.data;
+                this.renderProducts();
+            } else {
+                console.error('Failed to load featured products:', data.message);
+                this.loadFallbackProducts();
             }
+        } catch (error) {
+            console.error('Error loading featured products:', error);
+            this.loadFallbackProducts();
         }
-        
-        /* Remove conflicting img styles - handled by CSS file */
-        
-        .product-card {
-            cursor: pointer;
-        }
-        
-        .product-card:hover .product-name {
-            color: var(--accent-color);
-        }
-        
-        .price {
-            position: relative;
-        }
-        
-        .price::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
-            border-radius: 4px;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .product-card:hover .price::before {
-            opacity: 0.2;
-        }
-    `;
-    document.head.appendChild(style);
+    }
 
-    // Product details modal function
-    function showProductDetails(button) {
-        const card = button.closest('.product-card');
-        const productName = card.querySelector('.product-name').textContent;
-        const price = card.querySelector('.price').textContent;
-        const image = card.querySelector('.product-image').src;
+    renderProducts() {
+        const productGrid = document.querySelector('.product-grid');
+        if (!productGrid) return;
 
-        // Create modal
-        const modal = document.createElement('div');
-        modal.className = 'product-modal';
-        modal.innerHTML = `
-            <div class="modal-overlay">
-                <div class="modal-content">
-                    <button class="modal-close">&times;</button>
-                    <div class="modal-body">
-                        <img src="${image}" alt="${productName}" class="modal-image">
-                        <div class="modal-info">
-                            <h3>${productName}</h3>
-                            <p class="modal-price">${price}</p>
-                            <p class="modal-description">
-                                Produk berkualitas tinggi dengan desain eksklusif. 
-                                Tersedia dalam berbagai ukuran dan warna.
-                            </p>
-                            <div class="modal-actions">
-                                <button class="btn-whatsapp">Order via WhatsApp</button>
-                                <button class="btn-close">Tutup</button>
-                            </div>
-                        </div>
-                    </div>
+        productGrid.innerHTML = '';
+
+        if (this.products.length === 0) {
+            productGrid.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <p class="text-gray-500">No featured products available at the moment.</p>
                 </div>
-            </div>
-        `;
+            `;
+            return;
+        }
 
-        // Add modal styles
-        const modalStyle = document.createElement('style');
-        modalStyle.textContent = `
-            .product-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 1000;
-                animation: fadeIn 0.3s ease;
+        this.products.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.innerHTML = `
+                <img src="${product.image_url || 'images/produk lain 2.jpg'}" class="product-image" alt="${product.name}"/>
+                <div class="product-info">
+                    <p class="product-name">${product.name}</p>
+                </div>
+                <div class="product-footer">
+                    <a class="detail-btn btnDetail" data-product-id="${product.id}">Detail</a>
+                    <span class="price">Rp.${product.price.toLocaleString()}</span>
+                </div>
+            `;
+            productGrid.appendChild(productCard);
+        });
+    }
+
+    loadFallbackProducts() {
+        // Fallback to static products if API fails
+        const fallbackProducts = [
+            {
+                id: 1,
+                name: "KAOS SABLON PREMIUM",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 2,
+                name: "JAKET SABLON PREMIUM",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 3,
+                name: "CUSTOM SWEATER SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 4,
+                name: "CUSTOM SPORT SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 5,
+                name: "CUSTOM SPORT SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 6,
+                name: "CUSTOM SPORT SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 7,
+                name: "CUSTOM SPORT SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 8,
+                name: "CUSTOM SPORT SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
+            },
+            {
+                id: 9,
+                name: "CUSTOM SPORT SABLON",
+                price: 75000,
+                image_url: "images/produk lain 2.jpg"
             }
-            
-            .modal-overlay {
-                position: absolute;
+        ];
+
+        this.products = fallbackProducts;
+        this.renderProducts();
+    }
+
+    showProductDetail(button) {
+        const productId = button.getAttribute('data-product-id');
+        const product = this.products.find(p => p.id == productId);
+
+        if (product) {
+            // Create modal for product detail
+            const modal = document.createElement('div');
+            modal.className = 'product-modal';
+            modal.style.cssText = `
+                position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
                 background: rgba(0, 0, 0, 0.8);
                 display: flex;
-                align-items: center;
                 justify-content: center;
-                padding: 20px;
-            }
-            
-            .modal-content {
-                background: white;
-                border-radius: 12px;
-                max-width: 500px;
-                width: 100%;
-                max-height: 90vh;
-                overflow-y: auto;
-                position: relative;
-                animation: slideUp 0.3s ease;
-            }
-            
-            .modal-close {
-                position: absolute;
-                top: 15px;
-                right: 15px;
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #666;
-                z-index: 1;
-            }
-            
-            .modal-body {
-                padding: 20px;
-            }
-            
-            .modal-image {
-                width: 100%;
-                height: 300px;
-                object-fit: cover;
-                border-radius: 8px;
-                margin-bottom: 20px;
-            }
-            
-            .modal-info h3 {
-                color: var(--primary-color);
-                margin-bottom: 10px;
-            }
-            
-            .modal-price {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: var(--accent-color);
-                margin-bottom: 15px;
-            }
-            
-            .modal-description {
-                color: var(--text-light);
-                line-height: 1.6;
-                margin-bottom: 20px;
-            }
-            
-            .modal-actions {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-            
-            .btn-whatsapp {
-                background: #25d366;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 25px;
-                cursor: pointer;
-                font-weight: 500;
-                transition: all 0.3s ease;
-                flex: 1;
-            }
-            
-            .btn-whatsapp:hover {
-                background: #128c7e;
-                transform: translateY(-2px);
-            }
-            
-            .btn-close {
-                background: var(--text-light);
-                color: white;
-                border: none;
-                padding: 0 24px;
-                border-radius: 25px;
-                cursor: pointer;
-                font-weight: 500;
-                transition: all 0.3s ease;
-                min-width: 90px;
-                text-align: center;
-                display: flex;
                 align-items: center;
-                justify-content: center;
-                font-size: 1rem;
-                height: 44px;
-                white-space: normal;
-                overflow: visible;
-            }
-            
-            .btn-close:hover {
-                background: var(--text-dark);
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            @keyframes slideUp {
-                from { transform: translateY(50px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            
-            @media (max-width: 768px) {
-                .modal-content {
-                    margin: 10px;
+                z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div class="product-modal-content" style="
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 8px;
+                    max-width: 500px;
+                    width: 90%;
+                    position: relative;
+                ">
+                    <button class="close-modal" style="
+                        position: absolute;
+                        top: 10px;
+                        right: 15px;
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
+                    
+                    <div class="product-detail">
+                        <img src="${product.image_url || 'images/produk lain 2.jpg'}" 
+                             alt="${product.name}" 
+                             style="width: 100%; height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">
+                        
+                        <h3 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">${product.name}</h3>
+                        
+                        <p style="color: #666; margin-bottom: 1rem;">${product.description || 'Produk berkualitas tinggi dengan desain yang menarik.'}</p>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <span style="font-size: 1.25rem; font-weight: bold; color: #000;">Rp.${product.price.toLocaleString()}</span>
+                            <span style="color: #666;">Stock: ${product.stock || 'Tersedia'}</span>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <a href="https://wa.me/6281234567890?text=Halo, saya tertarik dengan produk ${product.name}" 
+                               target="_blank"
+                               style="
+                                   display: inline-block;
+                                   background: #25D366;
+                                   color: white;
+                                   padding: 12px 24px;
+                                   text-decoration: none;
+                                   border-radius: 6px;
+                                   font-weight: bold;
+                               ">
+                                <i class="fab fa-whatsapp" style="margin-right: 8px;"></i>
+                                Pesan via WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close modal functionality
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.classList.contains('close-modal')) {
+                    document.body.removeChild(modal);
                 }
-                
-                .modal-actions {
-                    flex-direction: column;
-                }
-            }
-        `;
-        document.head.appendChild(modalStyle);
-
-        // Add modal to page
-        document.body.appendChild(modal);
-
-        // Close modal functionality
-        const closeModal = () => {
-            modal.style.animation = 'fadeOut 0.3s ease';
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        };
-
-        modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        modal.querySelector('.btn-close').addEventListener('click', closeModal);
-        modal.querySelector('.modal-overlay').addEventListener('click', function (e) {
-            if (e.target === this) closeModal();
-        });
-
-        // WhatsApp button functionality
-        modal.querySelector('.btn-whatsapp').addEventListener('click', function () {
-            const message = `Halo! Saya tertarik dengan produk ${productName} (${price}). Bisa tolong berikan informasi lebih lanjut?`;
-            const whatsappUrl = `https://wa.me/6285759790334?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-        });
-
-        // Add fadeOut animation
-        const fadeOutStyle = document.createElement('style');
-        fadeOutStyle.textContent = `
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(fadeOutStyle);
+            });
+        }
     }
+}
 
-    // Add some interactive features
-    console.log('SAKHA COLLECTION website loaded successfully! 🎉');
-
-    // Add loading indicator
-    window.addEventListener('load', function () {
-        document.body.style.opacity = '1';
-        document.body.style.transform = 'translateY(0)';
-    });
-
-    // Initialize body styles for loading animation
-    document.body.style.opacity = '0';
-    document.body.style.transform = 'translateY(20px)';
-    document.body.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new FeaturedProducts();
 });
