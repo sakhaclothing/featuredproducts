@@ -216,17 +216,17 @@ class FeaturedProducts {
             return;
         }
 
-        try {
-            // Show loading
-            const loadingElement = document.createElement('div');
-            loadingElement.innerHTML = window.jscroot.loading;
-            loadingElement.style.position = 'fixed';
-            loadingElement.style.top = '50%';
-            loadingElement.style.left = '50%';
-            loadingElement.style.transform = 'translate(-50%, -50%)';
-            loadingElement.style.zIndex = '9999';
-            document.body.appendChild(loadingElement);
+        // Show loading
+        const loadingElement = document.createElement('div');
+        loadingElement.innerHTML = window.jscroot.loading;
+        loadingElement.style.position = 'fixed';
+        loadingElement.style.top = '50%';
+        loadingElement.style.left = '50%';
+        loadingElement.style.transform = 'translate(-50%, -50%)';
+        loadingElement.style.zIndex = '9999';
+        document.body.appendChild(loadingElement);
 
+        try {
             // Use jscroot API to get product details
             const response = await new Promise((resolve) => {
                 window.jscroot.getJSON(`${this.apiBaseUrl}/products/${productId}`, resolve);
