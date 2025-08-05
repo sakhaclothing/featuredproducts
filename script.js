@@ -1,18 +1,6 @@
-// JSCROOT Library Usage Examples for Featured Products
-// ===================================================
+// Featured Products Script with Native JavaScript
+// =============================================
 
-// Wait for jscroot to be ready
-function waitForJscroot() {
-    return new Promise((resolve) => {
-        if (window.jscroot) {
-            resolve();
-        } else {
-            document.addEventListener('jscroot-ready', resolve);
-        }
-    });
-}
-
-// Featured Products Script with JSCROOT Integration
 class FeaturedProducts {
     constructor() {
         this.apiBaseUrl = 'https://asia-southeast2-ornate-course-437014-u9.cloudfunctions.net/sakha';
@@ -30,48 +18,67 @@ class FeaturedProducts {
         });
     }
 
-    // Example 1: API calls using jscroot
+    // API calls using native fetch
     async loadFeaturedProducts() {
-        await waitForJscroot();
-
         // Show loading state
         const loadingElement = document.createElement('div');
-        loadingElement.innerHTML = window.jscroot.loading;
-        loadingElement.style.position = 'fixed';
-        loadingElement.style.top = '50%';
-        loadingElement.style.left = '50%';
-        loadingElement.style.transform = 'translate(-50%, -50%)';
-        loadingElement.style.zIndex = '9999';
+        loadingElement.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 9999;
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+            ">
+                <div style="
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 10px;
+                "></div>
+                <p>Loading products...</p>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
         document.body.appendChild(loadingElement);
 
         try {
-            // Use jscroot API functions
-            const response = await new Promise((resolve) => {
-                window.jscroot.getJSON(
-                    `${this.apiBaseUrl}/products?featured=true`,
-                    resolve
-                );
-            });
+            // Use native fetch API
+            const response = await fetch(`${this.apiBaseUrl}/products?featured=true`);
+            const data = await response.json();
 
             // Hide loading
             document.body.removeChild(loadingElement);
 
-            if (response.status === 200 && response.data.status === 'success') {
-                this.products = response.data.data;
+            if (response.status === 200 && data.status === 'success') {
+                this.products = data.data;
                 this.renderProducts();
 
                 // Set cookie to track product view
-                window.jscroot.setCookieWithExpireHour('featured_products_viewed', 'true', 24);
+                this.setCookie('featured_products_viewed', 'true', 24);
 
                 // Get browser info for analytics
                 const browserInfo = {
-                    isMobile: window.jscroot.isMobile()
+                    isMobile: this.isMobile()
                 };
 
                 console.log('Featured Products Browser Info:', browserInfo);
 
             } else {
-                console.error('Failed to load featured products:', response.data.message);
+                console.error('Failed to load featured products:', data.message);
                 this.loadFallbackProducts();
             }
         } catch (error) {
@@ -83,11 +90,9 @@ class FeaturedProducts {
         }
     }
 
-    // Example 2: DOM manipulation using jscroot
+    // DOM manipulation using native JavaScript
     async renderProducts() {
-        await waitForJscroot();
-
-        const productGrid = window.jscroot.getElement('product-grid') || document.querySelector('.product-grid');
+        const productGrid = document.getElementById('product-grid') || document.querySelector('.product-grid');
         if (!productGrid) return;
 
         // Clear existing content
@@ -118,13 +123,11 @@ class FeaturedProducts {
         });
     }
 
-    // Example 3: URL parameter handling
+    // URL parameter handling
     async handleProductUrlParameters() {
-        await waitForJscroot();
-
-        const queryString = window.jscroot.getQueryString();
-        const productId = queryString.product;
-        const category = queryString.category;
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('product');
+        const category = urlParams.get('category');
 
         if (productId) {
             console.log('Product ID from URL:', productId);
@@ -137,12 +140,10 @@ class FeaturedProducts {
         }
     }
 
-    // Example 4: Cookie management for user preferences
+    // Cookie management for user preferences
     async loadUserPreferences() {
-        await waitForJscroot();
-
-        const viewedProducts = window.jscroot.getCookie('featured_products_viewed');
-        const isMobile = window.jscroot.isMobile();
+        const viewedProducts = this.getCookie('featured_products_viewed');
+        const isMobile = this.isMobile();
 
         if (viewedProducts === 'true') {
             console.log('User has viewed featured products before');
@@ -205,10 +206,8 @@ class FeaturedProducts {
         this.renderProducts();
     }
 
-    // Example 5: Product detail with jscroot
+    // Product detail with native JavaScript
     async showProductDetail(button) {
-        await waitForJscroot();
-
         const productId = button.getAttribute('data-product-id');
 
         if (!productId) {
@@ -218,28 +217,46 @@ class FeaturedProducts {
 
         // Show loading
         const loadingElement = document.createElement('div');
-        loadingElement.innerHTML = window.jscroot.loading;
-        loadingElement.style.position = 'fixed';
-        loadingElement.style.top = '50%';
-        loadingElement.style.left = '50%';
-        loadingElement.style.transform = 'translate(-50%, -50%)';
-        loadingElement.style.zIndex = '9999';
+        loadingElement.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 9999;
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+            ">
+                <div style="
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 10px;
+                "></div>
+                <p>Loading product details...</p>
+            </div>
+        `;
         document.body.appendChild(loadingElement);
 
         try {
-            // Use jscroot API to get product details
-            const response = await new Promise((resolve) => {
-                window.jscroot.getJSON(`${this.apiBaseUrl}/products/${productId}`, resolve);
-            });
+            // Use native fetch API to get product details
+            const response = await fetch(`${this.apiBaseUrl}/products/${productId}`);
+            const data = await response.json();
 
             document.body.removeChild(loadingElement);
 
             if (response.status === 200) {
-                const product = response.data.data;
+                const product = data.data;
                 this.displayProductModal(product);
 
                 // Track product view
-                window.jscroot.setCookieWithExpireHour(`product_viewed_${productId}`, 'true', 24);
+                this.setCookie(`product_viewed_${productId}`, 'true', 24);
 
             } else {
                 throw new Error('Failed to load product details');
@@ -259,7 +276,7 @@ class FeaturedProducts {
     }
 
     displayProductModal(product) {
-        // Create modal content using jscroot
+        // Create modal content
         const modalContent = `
             <div class="product-modal">
                 <div class="modal-header">
@@ -305,12 +322,39 @@ class FeaturedProducts {
             }
         });
     }
+
+    // Native cookie functions
+    setCookie(name, value, hours) {
+        const d = new Date();
+        d.setTime(d.getTime() + (hours * 60 * 60 * 1000));
+        let expires = "expires=" + d.toUTCString();
+        document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+    }
+
+    getCookie(name) {
+        let nameEQ = encodeURIComponent(name) + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(nameEQ) === 0) {
+                return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+        }
+        return "";
+    }
+
+    // Native mobile detection
+    isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
 }
 
-// Initialize jscroot features
-async function initializeJscrootFeatures() {
-    await waitForJscroot();
-
+// Initialize featured products
+async function initializeFeaturedProducts() {
     // Initialize featured products
     const featuredProducts = new FeaturedProducts();
 
@@ -321,13 +365,13 @@ async function initializeJscrootFeatures() {
     await featuredProducts.loadUserPreferences();
 
     // Log browser information
-    console.log('Featured Products Is Mobile:', window.jscroot.isMobile());
+    console.log('Featured Products Is Mobile:', featuredProducts.isMobile());
 }
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function () {
     try {
-        await initializeJscrootFeatures();
+        await initializeFeaturedProducts();
     } catch (error) {
         console.error('Error initializing featured products:', error);
     }
